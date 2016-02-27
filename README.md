@@ -1,2 +1,2 @@
 # gitpizza
-pull up skrrrrry get in teh ride
+pull up skrrrrrt get in teh ride
