@@ -363,6 +363,7 @@ def add_new_pizza(branch):
 
     last_branch_added = None
     pizzas[branch] = Pizza()
+    order_info[branch] = order_info_global.copy()
     current_branch = branch
     print('Initialized basic pizza.')
     print('Switching to branch {0}.'.format(branch))
@@ -397,27 +398,25 @@ def print_help(command):
         print()
     elif command == 'base':
         print()
+    elif command == 'config'
 
 # Globals
 pizzas = {}
 last_branch_added = None
 current_branch = None
-# order_info_defaults = {
-#     'user.firstname': None,
-#     'user.lastname': None,
-#     'user.email': None,
-#     'user.phone': None,
-#     'delivery.instructions': None,
-#     'address.street_number': None,
-#     'address.city': None,
-#     'address.province': None,
-#     'address.suite': None,
-#     'address.additional': None
-# }
-# order_info = {
-#     'global': {},
-#     'branches': {}
-# }
+order_info = {}
+order_info_global = {
+    'user.firstname': None,
+    'user.lastname': None,
+    'user.email': None,
+    'user.phone': None,
+    'delivery.instructions': None,
+    'address.street_number': None,
+    'address.city': None,
+    'address.province': None,
+    'address.suite': None,
+    'address.additional': None
+}
 
 # Regexes
 regex_branch_name = re.compile(r'^[\w\d-]+$')
@@ -431,6 +430,7 @@ def set_defaults():
     pizzas = {}
     last_branch_added = None
     current_branch = None
+    order_info = {}
 
 # Defining folder for persistence between runs
 shelve_folder = 'shelves'
@@ -448,16 +448,34 @@ if os.path.isfile(shelve_fullname):
         last_branch_added = shelf['last_branch_added']
         current_branch = shelf['current_branch']
         order_info = shelf['order_info']
+        order_info_global = shelf['order_info_global']
 
-def parse_config(args):
-    if len(args) != 2:
-        print_help('config')
+def parse_config(is_global, args):
+    config_to_set = []
+
+    if 'global' == is_global:
+        config_to_set.append(order_info_global)
+        config_to_set.append(order_info[current_branch])
+    else:
+        config_to_set.append(order_info[current_branch])
+
+    config = args[0]
+
+    if len(args) == 1:
+        if config in config_to_set[0]:
+            print(config_to_set[0][config])
+        else:
+            print_help('config')
         return
 
-    config = args[1]
-    value = args[2]
-
-
+    value = args[1]
+    if config in config_to_set[0]:
+        print(bcolors.RED + str(config_to_set[0][config]) + bcolors.END)
+        for config_set in config_to_set:
+            config_set[config] = value
+        print(config_to_set[0][config])
+    else:
+        print_help('config')
 
 # Argument parsing
 def parse_single_arg(arg):
@@ -525,9 +543,9 @@ def parse_multi_args(args):
             print(bcolors.RED + 'fatal:' + bcolors.END + ' destination {0} is not a directory.'.format(args[1]))
     elif args[0] == 'config':
         if args[1] == '--global':
-            parse_config(args[2:])
+            parse_config('global', args[2:])
         else:
-            print_help('config')
+            parse_config('default', args[1:])
     elif args[0] in ['add', 'rm']:
         if len(args) == 3:
             if '--' in args[1]:
@@ -565,3 +583,4 @@ with shelve.open(shelve_fullname, 'c') as shelf:
     shelf['last_branch_added'] = last_branch_added
     shelf['current_branch'] = current_branch
     shelf['order_info'] = order_info
+    shelf['order_info_global'] = order_info_global
