@@ -1,3 +1,5 @@
+#!/usr/bin/env python3.5
+
 import os
 import re
 import shelve
@@ -633,7 +635,7 @@ def set_defaults():
     order_info = {}
 
 # Defining folder for persistence between runs
-shelve_folder = 'shelves'
+shelve_folder = '.gitpizza-shelves'
 shelve_name = 'pizza-persistence'
 shelve_fullname = os.path.join(shelve_folder, shelve_name)
 

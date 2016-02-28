@@ -69,4 +69,4 @@ target/
 .python-version
 
 # Shelves
-shelves/
+.gitpizza-shelves/
