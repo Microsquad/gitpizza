@@ -473,10 +473,23 @@ def perform_order_placement():
             if veggie not in veggie_cache['left']:
                 click_topping(actions, root_div, veggies, veggie, 'right')
         actions.perform()
+        time.sleep(1)
 
-        actions
+        browser.find_element_by_css_selector('.button.ph-default-button.qs-text-button.ng-binding').click()
 
-        time.sleep(30)
+    print('proceeding to checkout...')
+    browser.get('https://www.pizzahut.ca/#!/cart')
+    browser.get('https://www.pizzahut.ca/#!/checkout')
+    browser.get('https://www.pizzahut.ca/#!/showcheckoutguestdetails')
+    browser.get('https://www.pizzahut.ca/#!/paymentdetails')
+
+    time.sleep(2)
+    html = browser.execute_script("return document.documentElement.outerHTML")
+    total = re.search(r'<td class=\"product-price order-total ng-binding\">(.*?)<\/td>', html).group(1)
+
+    print('pizza ordered! your total is {0}, please be ready to pay by {1}.'.format(total, order_info['delivery.payment']))
+
+    time.sleep(5)
 
     browser.quit()
 
