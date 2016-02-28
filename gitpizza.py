@@ -90,7 +90,7 @@ class Pizza(object):
 
         # Create a list of the sides the topping is being added to
         if side_arg == 'both':
-            side_arg = sides
+            side_arg = ['left', 'right']
         else:
             side_arg = [side_arg]
 
@@ -116,9 +116,9 @@ class Pizza(object):
 
         # Create a list of the sides the topping is being added to
         if side_arg == 'both':
-            side_arg = sides
+            side_arg = ['left', 'right']
         else:
-            side_arg = [side]
+            side_arg = [side_arg]
 
         if topping not in meats and topping not in veggies:
             return False
@@ -253,6 +253,14 @@ def switch_to_branch(branch):
     else:
         print(bcolors.RED + 'The branch ' + bcolors.END + bcolors.BOLD + branch + bcolors.END + bcolors.RED + ' does not exist.' + bcolors.END)
 
+def get_side_from_arg(arg):
+    if arg in ['left', '--left', '-l']:
+        return 'left'
+    elif arg in ['right', '--right', '-r']:
+        return 'right'
+    else:
+        return 'both'
+
 # Globals
 pizzas = {}
 last_branch_added = None
@@ -304,6 +312,8 @@ def parse_single_arg(arg):
                 print(bcolors.GREEN + '* ' + branch + bcolors.END)
             else:
                 print('  ' + branch)
+    elif 'status' == arg:
+        print(pizzas[current_branch].get_status())
     elif 'reset' == arg:
         set_defaults()
         print(bcolors.BOLD + 'Your order has been reset.' + bcolors.END)
@@ -314,6 +324,27 @@ def parse_multi_args(args):
             add_new_pizza(args[2])
         elif regex_branch_name.match(args[1]):
             switch_to_branch(args[1])
+    elif args[0] in ['add', 'rm']:
+        if len(args) == 3:
+            if '--' in args[1]:
+                side = get_side_from_arg(args[1])
+                topping_arg = args[2]
+            else:
+                side = 'both'
+                topping_arg = args[1]
+        elif len(args) == 2:
+            side = 'both'
+            topping_arg = args[1]
+        else:
+            print(bcolors.RED + 'fatal:' + bcolors.END + ' could not parse gitpizza {0} args.'.format(args[0]))
+            return
+
+        if args[0] == 'add':
+            if not pizzas[current_branch].add_topping(side, topping_arg):
+                print('fatal: pathspec \'{0}\' did not match any toppings'.format(topping_arg))
+        else:
+            if not pizzas[current_branch].remove_topping(side, topping_arg):
+                print('fatal: pathspec \'{0}\' did not match any toppings'.format(topping_arg))
 
 if len(sys.argv) <= 1:
     print_welcome_message()
