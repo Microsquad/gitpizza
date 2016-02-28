@@ -1,3 +1,5 @@
+import os
+import shelve
 import sys
 
 # Available sizes
@@ -189,39 +191,82 @@ class Pizza(object):
             right_meats,
             right_veggies)
 
+        return properties
 
-        print(properties)
+# Prints a sick ass pizza
+def print_pizza():
+    print("""
+        _....._
+    _.:`.--|--.`:._
+  .: .'\o  | o /'. '.
+ // '.  \ o|  /  o '.\\
+//'._o'. \ |o/ o_.-'o\\\\
+|| o '-.'.\|/.-' o   ||
+||--o--o-->|<o-----o-||
+\\\\  o _.-'/|\\'-._o  o//
+ \\\\.-'  o/ |o\ o '-.//
+  '.'.o / o|  \ o.'.'
+    `-:/.__|__o\:-'
+       `"--=--"`
+    """)
 
-        # '\n\t\t\t'.join(self.meats['left'])
-        # '\t\tLeft Veggies:\n'
-        # '\n\t\t\t'.join(self.veggies['left'])
-        #
-        # '\t\tRight cheese:\n'
-        # '\t\tRight Meats:\n'
-        # '\n\t\t\t'.join(self.meats['right'])
-        # '\t\tRight Veggies:\n'
-        # '\n\t\t\t'.join(self.veggies['right'])
+def add_new_pizza(branch):
+    global last_branch_added
+    print_pizza()
 
-# def create_new_pizza():
+    if branch in pizzas and branch != last_branch_added:
+        print('You are attempting to create a new branch but a pizza already exists.')
+        print(pizzas[branch].get_status())
+        print('Run this command again to override your pizza.')
+        last_branch_added = branch
+        return False
 
-pizza = Pizza()
-pizza.add_topping('left', 'pepperoni')
-pizza.add_topping('right', 'ham')
-pizza.add_topping('right', 'pineapple')
-pizza.get_status()
+    last_branch_added = None
+    pizzas[branch] = Pizza()
+    print('Initialized basic pizza.')
+    print('Switching to branch {0}.'.format(branch))
+    print(pizzas[branch].get_status())
+
+pizzas = {}
+last_branch_added = None
+
+# Defining folder for persistence between runs
+shelve_folder = 'shelves'
+shelve_name = 'pizza-persistence'
+shelve_fullname = os.path.join(shelve_folder, shelve_name)
+
+# Create the folder for persistence if it doesn't exist
+if not os.path.exists(shelve_folder):
+    os.makedirs(shelve_folder)
+
+# Load the persistence if it exists
+if os.path.isfile(shelve_fullname):
+    with shelve.open(shelve_fullname, 'r') as shelf:
+        pizzas = shelf['pizzas']
+        last_branch_added = shelf['last_branch_added']
 
 # Argument parsing
-# def parse_first_arg(arg):
-#     if 'init' == arg:
-#         create_new_pizza()
-#
-#
-#
-# # Tool
-# if len(sys.argv) <= 1:
-#     print('\tWelcome to git-pizza.')
-#     print('\tTo get started, create a new order with git-pizza init')
-#
-#
-# if len(sys.argv) == 2:
-#     parse_single_args(sys.argv[1])
+def parse_first_arg(arg):
+    global pizzas
+    if 'init' == arg:
+        if len(pizzas) == 0:
+            pizzas = {}
+            add_new_pizza('master')
+        else:
+            print('You have already initiated an order.')
+            print('You\'ll have to delete your current pizzas to create a new order.')
+            print('Try the command \'git branch\' to see your current pizzas.')
+
+# Tool
+if len(sys.argv) <= 1:
+    print('\tWelcome to git-pizza.')
+    print('\tTo get started, create a new order with git-pizza init')
+
+
+if len(sys.argv) == 2:
+    parse_first_arg(sys.argv[1])
+
+# Save the configuration for the next run
+with shelve.open(shelve_fullname, 'c') as shelf:
+    shelf['pizzas'] = pizzas
+    shelf['last_branch_added'] = last_branch_added
