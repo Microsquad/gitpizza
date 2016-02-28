@@ -69,9 +69,9 @@ class Pizza(object):
 
         # Create a list of the sides the cheese is being changed on
         if side_arg == 'both':
-            side_arg = sides
+            side_arg = ['left', 'right']
         else:
-            side_arg = [side]
+            side_arg = [side_arg]
 
         # Make sure the cheese is a valid type
         if cheese not in cheeses:
@@ -313,6 +313,7 @@ def parse_single_arg(arg):
             else:
                 print('  ' + branch)
     elif 'status' == arg:
+        print('On branch {0}'.format(current_branch))
         print(pizzas[current_branch].get_status())
     elif 'reset' == arg:
         set_defaults()
@@ -324,6 +325,34 @@ def parse_multi_args(args):
             add_new_pizza(args[2])
         elif regex_branch_name.match(args[1]):
             switch_to_branch(args[1])
+    elif args[0] == 'mv':
+        if len(args) < 3:
+            print_help('mv')
+            return
+        if args[1] == 'size':
+            if not pizzas[current_branch].change_size(args[2]):
+                print(bcolors.RED + 'fatal:' + bcolors.END + ' destination {0} is not a directory.'.format(args[2]))
+                print_help('size')
+        elif args[1] == 'base':
+            if not pizzas[current_branch].change_base(args[2]):
+                print(bcolors.RED + 'fatal:' + bcolors.END + ' destination {0} is not a directory.'.format(args[2]))
+                print_help('base')
+        elif args[1] == 'sauce':
+            if not pizzas[current_branch].change_sauce(args[2]):
+                print(bcolors.RED + 'fatal:' + bcolors.END + ' destination {0} is not a directory.'.format(args[2]))
+                print_help('sauce')
+        elif args[1] == 'cheese' and len(args) :
+            if '--' in args[2]:
+                side = get_side_from_arg(args[2])
+                cheese_arg = args[3]
+            else:
+                side = 'both'
+                cheese_arg = args[2]
+            if not pizzas[current_branch].change_cheese(side, cheese_arg):
+                print(bcolors.RED + 'fatal:' + bcolors.END + ' destination {0} is not a directory.'.format(cheese_arg))
+                print_help('cheese')
+        else:
+            print(bcolors.RED + 'fatal:' + bcolors.END + ' destination {0} is not a directory.'.format(args[1]))
     elif args[0] in ['add', 'rm']:
         if len(args) == 3:
             if '--' in args[1]:
@@ -348,16 +377,12 @@ def parse_multi_args(args):
 
 if len(sys.argv) <= 1:
     print_welcome_message()
+elif len(pizzas) == 0 and 'init' != sys.argv[1]:
+    print_welcome_message()
 elif len(sys.argv) == 2:
-    if len(pizzas) == 0 and 'init' != sys.argv[1]:
-        print_welcome_message()
-    else:
-        parse_single_arg(sys.argv[1])
+    parse_single_arg(sys.argv[1])
 else:
-    if len(pizzas) == 0 and 'init' != sys.argv[1]:
-        print_welcome_message()
-    else:
-        parse_multi_args(sys.argv[1:])
+    parse_multi_args(sys.argv[1:])
 
 # Save the configuration for the next run
 with shelve.open(shelve_fullname, 'c') as shelf:
