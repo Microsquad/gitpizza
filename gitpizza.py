@@ -40,8 +40,15 @@ class Pizza(object):
         self.size = 'personal'
         self.base = 'pan'
         self.sauce = 'tomato'
+        self.old_meats = None
+        self.old_veggies = None
+
+    def clear_merge_cache(self):
+        self.old_meats = None
+        self.old_veggies = None
 
     def change_size(self, size):
+        self.clear_merge_cache()
         # Check if the size is valid and if so, update the pizza
         if size not in sizes:
             return False
@@ -49,6 +56,7 @@ class Pizza(object):
         return True
 
     def change_base(self, base):
+        self.clear_merge_cache()
         # Check if the base is valid and if so, update the pizza
         if base not in bases:
             return False
@@ -56,6 +64,7 @@ class Pizza(object):
         return True
 
     def change_sauce(self, sauce):
+        self.clear_merge_cache()
         # Check if the sauce type is valid and if so, update the pizza
         if sauce not in sauces:
             return False
@@ -63,6 +72,7 @@ class Pizza(object):
         return True
 
     def change_cheese(self, side_arg, cheese):
+        self.clear_merge_cache()
         # If the side is not 'left', 'right', or 'both', return False
         if side_arg not in sides:
             return False
@@ -82,8 +92,41 @@ class Pizza(object):
             self.cheese[side] = cheese
         return True
 
+    def merge(self):
+        meat_merged = False
+        veggies_merged = False
+
+        self.old_meats = {'left': self.meats['left'].copy(), 'right': self.meats['right'].copy()}
+        self.old_veggies = {'left': self.veggies['left'].copy(), 'right': self.veggies['right'].copy()}
+
+        if len(self.meats['left'] ^ self.meats['right']) > 0:
+            meat_merged = True
+            self.meats['left'] |= self.meats['right']
+            self.meats['right'] |= self.meats['left']
+        if len(self.veggies['left'] ^ self.veggies['right']) > 0:
+            veggies_merged = True
+            self.veggies['left'] |= self.veggies['right']
+            self.veggies['right'] |= self.veggies['left']
+
+        if not meat_merged and not veggies_merged:
+            print('no changes added to commit (use ' + bcolors.BOLD + '\'gitpizza add\'' + bcolors.END + ')')
+        else:
+            if meat_merged:
+                print(bcolors.GREEN + 'meat automerge success.' + bcolors.END)
+            if veggies_merged:
+                print(bcolors.GREEN + 'veggies automerge success.' + bcolors.END)
+            print('use ' + bcolors.BOLD + '\'gitpizza revert\'' + bcolors.END + ' to undo.')
+
+    def unmerge(self):
+        if not self.old_meats or not self.old_veggies:
+            print(bcolors.RED + 'fatal:' + bcolors.END + ' commands have been executed since the merge, reverting merge is not possible.')
+        else:
+            self.meats = self.old_meats
+            self.veggies = self.old_veggies
+            print('meat and veggie merge ' + bcolors.BOLD + 'reverted' + bcolors.END + '.')
 
     def add_topping(self, side_arg, topping):
+        self.clear_merge_cache()
         # If the side is not 'left', 'right', or 'both', return False
         if side_arg not in sides:
             return False
@@ -110,6 +153,7 @@ class Pizza(object):
         return True
 
     def remove_topping(self, side_arg, topping):
+        self.clear_merge_cache()
         # If the side is not 'left' or 'right', return False
         if side_arg not in sides:
             return False
@@ -358,6 +402,22 @@ def print_help(command):
 pizzas = {}
 last_branch_added = None
 current_branch = None
+# order_info_defaults = {
+#     'user.firstname': None,
+#     'user.lastname': None,
+#     'user.email': None,
+#     'user.phone': None,
+#     'delivery.instructions': None,
+#     'address.street_number': None,
+#     'address.city': None,
+#     'address.province': None,
+#     'address.suite': None,
+#     'address.additional': None
+# }
+# order_info = {
+#     'global': {},
+#     'branches': {}
+# }
 
 # Regexes
 regex_branch_name = re.compile(r'^[\w\d-]+$')
@@ -387,6 +447,17 @@ if os.path.isfile(shelve_fullname):
         pizzas = shelf['pizzas']
         last_branch_added = shelf['last_branch_added']
         current_branch = shelf['current_branch']
+        order_info = shelf['order_info']
+
+def parse_config(args):
+    if len(args) != 2:
+        print_help('config')
+        return
+
+    config = args[1]
+    value = args[2]
+
+
 
 # Argument parsing
 def parse_single_arg(arg):
@@ -405,6 +476,10 @@ def parse_single_arg(arg):
                 print(bcolors.GREEN + '* ' + branch + bcolors.END)
             else:
                 print('  ' + branch)
+    elif 'merge' == arg:
+        pizzas[current_branch].merge()
+    elif 'revert' == arg:
+        pizzas[current_branch].unmerge()
     elif 'status' == arg:
         print('On branch {0}'.format(current_branch))
         print(pizzas[current_branch].get_status())
@@ -448,6 +523,11 @@ def parse_multi_args(args):
                 print_help('cheese')
         else:
             print(bcolors.RED + 'fatal:' + bcolors.END + ' destination {0} is not a directory.'.format(args[1]))
+    elif args[0] == 'config':
+        if args[1] == '--global':
+            parse_config(args[2:])
+        else:
+            print_help('config')
     elif args[0] in ['add', 'rm']:
         if len(args) == 3:
             if '--' in args[1]:
@@ -484,3 +564,4 @@ with shelve.open(shelve_fullname, 'c') as shelf:
     shelf['pizzas'] = pizzas
     shelf['last_branch_added'] = last_branch_added
     shelf['current_branch'] = current_branch
+    shelf['order_info'] = order_info
