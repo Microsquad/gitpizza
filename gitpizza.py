@@ -129,6 +129,87 @@ class Pizza(object):
             self.veggies[side].discard(topping)
         return True
 
+    def get_diff(self):
+        if self.cheese['left'] != self.cheese['right']:
+            cheese_diff = '\t{:<33}| {}'.format(bcolors.GREEN + self.cheese['left'] + bcolors.END, bcolors.RED + self.cheese['right'] + bcolors.END)
+        else:
+            cheese_diff = '\t{:<33}| {}'.format(self.cheese['left'], self.cheese['right'])
+
+        left_meat = sorted(list(self.meats['left']))
+        right_meat = sorted(list(self.meats['right']))
+
+        meat_diff = ""
+        i = 0
+        if len(left_meat) == 0 and len(right_meat) == 0:
+            meat_diff = '\t{0:<24}| {0}\n'.format('None')
+        else:
+            while i < len(left_meat):
+                if left_meat[i] in right_meat:
+                    meat_diff += '\t{0:<24}| {0}\n'.format(left_meat[i])
+                    right_meat.remove(left_meat[i])
+                    left_meat.remove(left_meat[i])
+                    i -= 1
+                i += 1
+            for i in range(max(len(left_meat), len(right_meat))):
+                left = ""
+                right = ""
+                if i < len(left_meat):
+                    left = left_meat[i]
+                if i < len(right_meat):
+                    right = right_meat[i]
+                meat_diff += '\t{:<33}| {}\n'.format(bcolors.GREEN + left + bcolors.END, bcolors.RED + right + bcolors.END)
+
+        left_veggies = sorted(list(self.veggies['left']))
+        right_veggies = sorted(list(self.veggies['right']))
+
+        veggie_diff = ""
+        i = 0
+        if len(left_veggies) == 0 and len(right_veggies) == 0:
+            veggie_diff = '\t{0:<24}| {0}\n'.format('None')
+        else:
+            while i < len(left_veggies):
+                if left_veggies[i] in right_veggies:
+                    veggie_diff += '\t{0:<24}| {0}\n'.format(left_veggies[i])
+                    right_veggies.remove(left_veggies[i])
+                    left_veggies.remove(left_veggies[i])
+                    i -= 1
+                i += 1
+            for i in range(max(len(left_veggies), len(right_veggies))):
+                left = ""
+                right = ""
+                if i < len(left_veggies):
+                    left = left_veggies[i]
+                if i < len(right_veggies):
+                    right = right_veggies[i]
+                veggie_diff += '\t{:<33}| {}\n'.format(bcolors.GREEN + left + bcolors.END, bcolors.RED + right + bcolors.END)
+
+        diff = (
+            "\n\tYour pizza so far:\n"
+            "\n"
+            "" + bcolors.BOLD + "\tLeft cheese\t\t| Right cheese\n" + bcolors.END + ""
+            "\t{:-^50}\n"
+            "{}\n"
+            "\n"
+            "" + bcolors.BOLD + "\tLeft meats\t\t| Right meats\n" + bcolors.END + ""
+            "\t{:-^50}\n"
+            "{}"
+            "\n"
+            "" + bcolors.BOLD + "\tLeft veggies\t\t|Right veggies\n" + bcolors.END + ""
+            "\t{:-^50}\n"
+            "{}\n"
+        )
+
+        diff = diff.format(
+            '',
+            cheese_diff,
+            '',
+            meat_diff,
+            '',
+            veggie_diff
+        )
+
+        return diff
+
     def get_status(self):
         # Compile a string containing the left meats
         if len(self.meats['left']) == 0:
@@ -261,6 +342,18 @@ def get_side_from_arg(arg):
     else:
         return 'both'
 
+def print_help(command):
+    if command == 'mv':
+        print()
+    elif command == 'size':
+        print()
+    elif command == 'sauce':
+        print()
+    elif command == 'cheese':
+        print()
+    elif command == 'base':
+        print()
+
 # Globals
 pizzas = {}
 last_branch_added = None
@@ -315,6 +408,8 @@ def parse_single_arg(arg):
     elif 'status' == arg:
         print('On branch {0}'.format(current_branch))
         print(pizzas[current_branch].get_status())
+    elif 'diff' == arg:
+        print(pizzas[current_branch].get_diff())
     elif 'reset' == arg:
         set_defaults()
         print(bcolors.BOLD + 'Your order has been reset.' + bcolors.END)
