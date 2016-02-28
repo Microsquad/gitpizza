@@ -1,6 +1,16 @@
 import os
+import re
 import shelve
 import sys
+
+class bcolors:
+    MAGENTA = '\033[95m'
+    BLUE = '\033[94m'
+    GREEN = '\033[92m'
+    YELLOW = '\033[93m'
+    RED = '\033[91m'
+    BOLD = '\033[1m'
+    END = '\033[0m'
 
 # Available sizes
 sizes = {'personal', 'small', 'medium', 'large'}
@@ -210,8 +220,14 @@ def print_pizza():
        `"--=--"`
     """)
 
+def print_welcome_message():
+    print_pizza()
+    print('Welcome to gitpizza.')
+    print('To get started, create a new order with \'gitpizza init\'\n')
+
 def add_new_pizza(branch):
     global last_branch_added
+    global current_branch
 
     if branch in pizzas and branch != last_branch_added:
         print('You are attempting to create a new branch but a pizza already exists.')
@@ -222,12 +238,28 @@ def add_new_pizza(branch):
 
     last_branch_added = None
     pizzas[branch] = Pizza()
+    current_branch = branch
     print('Initialized basic pizza.')
     print('Switching to branch {0}.'.format(branch))
     print(pizzas[branch].get_status())
 
+def switch_to_branch(branch):
+    global current_branch
+
+    if branch in pizzas:
+        current_branch = branch
+        print('Switching to branch {0}.'.format(branch))
+        print(pizzas[branch].get_status())
+    else:
+        print(bcolors.RED + 'The branch ' + bcolors.END + bcolors.BOLD + branch + bcolors.END + bcolors.RED + ' does not exist.' + bcolors.END)
+
+# Globals
 pizzas = {}
 last_branch_added = None
+current_branch = None
+
+# Regexes
+regex_branch_name = re.compile(r'^[\w\d-]+$')
 
 # Reset all variables to their default value
 # If the globals above are updated, they should be updated here
@@ -237,11 +269,7 @@ def set_defaults():
 
     pizzas = {}
     last_branch_added = None
-
-def print_welcome_message():
-    print_pizza()
-    print('Welcome to git-pizza.')
-    print('To get started, create a new order with \'gitpizza init\'\n')
+    current_branch = None
 
 # Defining folder for persistence between runs
 shelve_folder = 'shelves'
@@ -257,6 +285,7 @@ if os.path.isfile(shelve_fullname):
     with shelve.open(shelve_fullname, 'r') as shelf:
         pizzas = shelf['pizzas']
         last_branch_added = shelf['last_branch_added']
+        current_branch = shelf['current_branch']
 
 # Argument parsing
 def parse_single_arg(arg):
@@ -266,17 +295,25 @@ def parse_single_arg(arg):
             pizzas = {}
             add_new_pizza('master')
         else:
-            print('You have already initiated an order.')
+            print(bcolors.RED + 'You have already initiated an order.' + bcolors.END)
             print('You\'ll have to delete your current pizzas to create a new order.')
-            print('Try the command \'gitpizza branch\' to see your current pizzas.')
+            print('Try the command ' + bcolors.BOLD + '\'gitpizza branch\' ' + bcolors.END + 'to see your current pizzas.')
     elif 'branch' == arg:
-        if (len(pizzas)) == 0:
-            print('You haven\'t created any pizzas. Try running \'gitpizza init\'')
-        else:
-            print('x')
+        for branch in pizzas:
+            if current_branch == branch:
+                print(bcolors.GREEN + '* ' + branch + bcolors.END)
+            else:
+                print('  ' + branch)
     elif 'reset' == arg:
         set_defaults()
-        print('Your order has been reset.')
+        print(bcolors.BOLD + 'Your order has been reset.' + bcolors.END)
+
+def parse_multi_args(args):
+    if 'checkout' == args[0]:
+        if args[1] == '-b' and regex_branch_name.match(args[2]):
+            add_new_pizza(args[2])
+        elif regex_branch_name.match(args[1]):
+            switch_to_branch(args[1])
 
 if len(sys.argv) <= 1:
     print_welcome_message()
@@ -285,8 +322,14 @@ elif len(sys.argv) == 2:
         print_welcome_message()
     else:
         parse_single_arg(sys.argv[1])
+else:
+    if len(pizzas) == 0 and 'init' != sys.argv[1]:
+        print_welcome_message()
+    else:
+        parse_multi_args(sys.argv[1:])
 
 # Save the configuration for the next run
 with shelve.open(shelve_fullname, 'c') as shelf:
     shelf['pizzas'] = pizzas
     shelf['last_branch_added'] = last_branch_added
+    shelf['current_branch'] = current_branch
