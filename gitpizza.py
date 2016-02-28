@@ -458,6 +458,8 @@ def perform_order_placement():
                 click_topping(actions, root_div, meats, meat, 'right')
         actions.perform()
 
+        time.sleep(10)
+
         print('setting veggie toppings...')
         actions = ActionChains(browser)
         actions.move_to_element_with_offset(root_div, 730, 400).click()
@@ -473,15 +475,19 @@ def perform_order_placement():
             if veggie not in veggie_cache['left']:
                 click_topping(actions, root_div, veggies, veggie, 'right')
         actions.perform()
-        time.sleep(1)
+        time.sleep(10)
 
         browser.find_element_by_css_selector('.button.ph-default-button.qs-text-button.ng-binding').click()
 
     print('proceeding to checkout...')
     browser.get('https://www.pizzahut.ca/#!/cart')
+    time.sleep(5)
     browser.get('https://www.pizzahut.ca/#!/checkout')
+    time.sleep(5)
     browser.get('https://www.pizzahut.ca/#!/showcheckoutguestdetails')
+    time.sleep(5)
     browser.get('https://www.pizzahut.ca/#!/paymentdetails')
+    time.sleep(5)
 
     time.sleep(2)
     html = browser.execute_script("return document.documentElement.outerHTML")
@@ -582,19 +588,15 @@ def get_side_from_arg(arg):
 
 def print_help(command):
     if command == 'mv':
-        print()
-    elif command == 'size':
-        print()
-    elif command == 'sauce':
-        print()
-    elif command == 'cheese':
-        print()
-    elif command == 'base':
-        print()
+        print(bcolors.MAGENTA + 'mv' + bcolors.END + ' allows you to rename of the following pizza properties.')
+        print('\t' + bcolors.GREEN + 'size: ' + bcolors.END + ', '.join(sizes))
+        print('\t' + bcolors.GREEN + 'base: ' + bcolors.END + ', '.join(bases))
+        print('\t' + bcolors.GREEN + 'sauce: ' + bcolors.END + ', '.join(sauces))
     elif command == 'config':
-        print()
+        print(bcolors.MAGENTA + 'config' + bcolors.END + ' allows you to define where your pizza will be delivered.')
+        print('Add the flag --global to save these options for future orders.')
     elif command == 'push':
-        print()
+        print(bcolors.MAGENTA + 'push' + bcolors.END + ' your pizza to ' + bcolors.BOLD + 'origin master' + bcolors.END + ' to place your order.')
 
 # Globals
 pizzas = {}
@@ -718,6 +720,8 @@ def parse_single_arg(arg):
     elif 'reset' == arg:
         set_defaults()
         print(bcolors.BOLD + 'Your order has been reset.' + bcolors.END)
+    elif arg in ['mv', 'config', 'push']:
+        print_help(arg)
 
 def parse_multi_args(args):
     if 'checkout' == args[0]:
@@ -742,15 +746,15 @@ def parse_multi_args(args):
         if args[1] == 'size':
             if not pizzas[current_branch].change_size(args[2]):
                 print(bcolors.RED + 'fatal:' + bcolors.END + ' destination {0} is not a directory.'.format(args[2]))
-                print_help('size')
+                print_help('mv')
         elif args[1] == 'base':
             if not pizzas[current_branch].change_base(args[2]):
                 print(bcolors.RED + 'fatal:' + bcolors.END + ' destination {0} is not a directory.'.format(args[2]))
-                print_help('base')
+                print_help('mv')
         elif args[1] == 'sauce':
             if not pizzas[current_branch].change_sauce(args[2]):
                 print(bcolors.RED + 'fatal:' + bcolors.END + ' destination {0} is not a directory.'.format(args[2]))
-                print_help('sauce')
+                print_help('mv')
         elif args[1] == 'cheese' and len(args) :
             if '--' in args[2]:
                 side = get_side_from_arg(args[2])
@@ -760,7 +764,6 @@ def parse_multi_args(args):
                 cheese_arg = args[2]
             if not pizzas[current_branch].change_cheese(side, cheese_arg):
                 print(bcolors.RED + 'fatal:' + bcolors.END + ' destination {0} is not a directory.'.format(cheese_arg))
-                print_help('cheese')
         else:
             print(bcolors.RED + 'fatal:' + bcolors.END + ' destination {0} is not a directory.'.format(args[1]))
     elif args[0] == 'config':
