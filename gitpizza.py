@@ -29,6 +29,10 @@ meats = ['pepperoni', 'bacon-crumble', 'bacon', 'ham', 'grilled-chicken-breast',
 # List of available veggies options
 veggies = ['mushroom', 'green-pepper', 'pineapple', 'red-onions', 'roasted-red-peppers', 'hot-peppers', 'tomatoes', 'marinated-tomatoes', 'black-olives', 'roasted-garlic', 'parmesan', 'cheddar-cheese', 'cheese-curds', 'feta-cheese', 'pesto']
 
+required_data = ['address.city', 'address.province', 'address.street_number', 'address.street_name', 'user.email', 'user.firstname', 'user.lastname', 'user.phone', 'delivery.payment', ]
+
+valid_data = {'address.province': ['AB', 'BC', 'MB', 'NB', 'NT', 'NL', 'NS', 'ON', 'PE', 'QC', 'SK', 'YT'], 'delivery.payment': ['cash', 'credit', 'debit']}
+
 # Pizza object
 class Pizza(object):
 
@@ -177,7 +181,7 @@ class Pizza(object):
         if self.cheese['left'] != self.cheese['right']:
             cheese_diff = '\t{:<33}| {}'.format(bcolors.GREEN + self.cheese['left'] + bcolors.END, bcolors.RED + self.cheese['right'] + bcolors.END)
         else:
-            cheese_diff = '\t{:<33}| {}'.format(self.cheese['left'], self.cheese['right'])
+            cheese_diff = '\t{:<24}| {}'.format(self.cheese['left'], self.cheese['right'])
 
         left_meat = sorted(list(self.meats['left']))
         right_meat = sorted(list(self.meats['right']))
@@ -328,6 +332,62 @@ class Pizza(object):
 
         return properties
 
+def perform_order_placement():
+    from selenium import webdriver
+    from selenium.webdriver.common.action_chains import ActionChains
+    from selenium.webdriver.common.keys import Keys
+    import time
+
+    # Load the pizza hut webpage
+    browser = webdriver.Chrome()
+    print('ordering pizza...')
+    browser.get('https://www.pizzahut.ca/#!/home')
+    print('entering address...')
+    browser.find_element_by_css_selector('.button.ph-primary-button.button-welcome').click()
+
+    # Input the user's address
+    browser.execute_script('$("#search_streetnumber_251").click()')
+    time.sleep(2)
+    actions = ActionChains(browser)
+    actions.send_keys(Keys.TAB)
+    actions.send_keys(order_info['address.street_number'])
+    actions.send_keys(Keys.TAB)
+    actions.send_keys(order_info['address.street_name'])
+    actions.send_keys(Keys.TAB)
+    actions.send_keys(order_info['address.city'])
+    actions.send_keys(Keys.TAB)
+    actions.send_keys(order_info['address.province'])
+    actions.send_keys(Keys.TAB)
+    if order_info['address.suite']:
+        actions.send_keys(order_info['address.suite'])
+    actions.send_keys(Keys.TAB)
+    if order_info['address.additional']:
+        actions.send_keys(order_info['address.additional'])
+    actions.send_keys(Keys.ENTER)
+    actions.perform()
+    time.sleep(2)
+
+    # Select the closest store
+    print('selecting a store close to you...')
+    stores = browser.find_elements_by_class_name('store-selection-row')
+    if len(stores) > 0:
+        stores[0].click()
+    time.sleep(2)
+
+    # Loading pizza page
+    print('navigating to pizza...')
+    browser.get('https://www.pizzahut.ca/#!/menu/pizza')
+    time.sleep(3)
+    actions = ActionChains(browser)
+    for i in range(10):
+        actions.send_keys(Keys.TAB)
+    actions.send_keys(Keys.ENTER)
+    actions.perform()
+
+    time.sleep(30)
+
+    browser.quit()
+
 # Prints a sick ass pizza
 def print_pizza():
     print("""
@@ -363,11 +423,39 @@ def add_new_pizza(branch):
 
     last_branch_added = None
     pizzas[branch] = Pizza()
-    order_info[branch] = order_info_global.copy()
     current_branch = branch
     print('Initialized basic pizza.')
     print('Switching to branch {0}.'.format(branch))
     print(pizzas[branch].get_status())
+
+def commit_pizzas():
+    print('\nYou\'re nearly ready to order. Confirm your branches below.')
+    for branch in pizzas:
+        print('\n--------------------------------------\nStatus of branch ' + bcolors.GREEN + branch + bcolors.END)
+        print(pizzas[branch].get_status())
+    print('Ensure your delivery details are correct.\n')
+    sorted_order_info = sorted(list(order_info.keys()))
+    for info in sorted_order_info:
+        print(bcolors.MAGENTA + '  ' + '{:<25}'.format(info + ':') + bcolors.END + str(order_info[info]))
+    print('If this looks correct, place your order with ' + bcolors.BOLD + '\'gitpizza push origin master\'' + bcolors.END)
+
+def place_order():
+    missing_data = []
+    for config in required_data:
+        if order_info[config] == None:
+            missing_data.append(config)
+
+    if len(missing_data) > 0:
+        print(bcolors.RED + 'fatal:' + bcolors.END + ' unable to push to remote. You are missing required data for your order.')
+        for data in missing_data:
+            valid = ''
+            if data in valid_data:
+                valid = ': ' + bcolors.GREEN + ', '.join(valid_data[data]) + bcolors.END
+            print('missing: ' + bcolors.RED + data + bcolors.END + valid)
+        return
+
+    print_pizza()
+    perform_order_placement()
 
 def switch_to_branch(branch):
     global current_branch
@@ -398,20 +486,25 @@ def print_help(command):
         print()
     elif command == 'base':
         print()
-    elif command == 'config'
+    elif command == 'config':
+        print()
+    elif command == 'push':
+        print()
 
 # Globals
 pizzas = {}
 last_branch_added = None
 current_branch = None
-order_info = {}
+order_info = None
 order_info_global = {
     'user.firstname': None,
     'user.lastname': None,
     'user.email': None,
     'user.phone': None,
     'delivery.instructions': None,
+    'delivery.payment': None,
     'address.street_number': None,
+    'address.street_name': None,
     'address.city': None,
     'address.province': None,
     'address.suite': None,
@@ -455,9 +548,9 @@ def parse_config(is_global, args):
 
     if 'global' == is_global:
         config_to_set.append(order_info_global)
-        config_to_set.append(order_info[current_branch])
+        config_to_set.append(order_info)
     else:
-        config_to_set.append(order_info[current_branch])
+        config_to_set.append(order_info)
 
     config = args[0]
 
@@ -469,6 +562,12 @@ def parse_config(is_global, args):
         return
 
     value = args[1]
+    if config in valid_data:
+        if value not in valid_data[config]:
+            print(bcolors.RED + 'fatal: ' + bcolors.END + 'invalid configuration value provided.')
+            print(bcolors.GREEN + 'valid: ' + bcolors.END + ', '.join(valid_data[config]))
+            return
+
     if config in config_to_set[0]:
         print(bcolors.RED + str(config_to_set[0][config]) + bcolors.END)
         for config_set in config_to_set:
@@ -480,10 +579,12 @@ def parse_config(is_global, args):
 # Argument parsing
 def parse_single_arg(arg):
     global pizzas
+    global order_info
     if 'init' == arg:
         if len(pizzas) == 0:
             pizzas = {}
             add_new_pizza('master')
+            order_info = order_info_global.copy()
         else:
             print(bcolors.RED + 'You have already initiated an order.' + bcolors.END)
             print('You\'ll have to delete your current pizzas to create a new order.')
@@ -503,6 +604,8 @@ def parse_single_arg(arg):
         print(pizzas[current_branch].get_status())
     elif 'diff' == arg:
         print(pizzas[current_branch].get_diff())
+    elif 'commit' == arg:
+        commit_pizzas()
     elif 'reset' == arg:
         set_defaults()
         print(bcolors.BOLD + 'Your order has been reset.' + bcolors.END)
@@ -546,6 +649,12 @@ def parse_multi_args(args):
             parse_config('global', args[2:])
         else:
             parse_config('default', args[1:])
+    elif args[0] == 'push':
+        if len(args) == 3:
+            if args[1] == 'origin' and args[2] == 'master':
+                place_order()
+                return
+        print_help('push')
     elif args[0] in ['add', 'rm']:
         if len(args) == 3:
             if '--' in args[1]:
