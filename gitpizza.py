@@ -212,7 +212,6 @@ def print_pizza():
 
 def add_new_pizza(branch):
     global last_branch_added
-    print_pizza()
 
     if branch in pizzas and branch != last_branch_added:
         print('You are attempting to create a new branch but a pizza already exists.')
@@ -230,6 +229,20 @@ def add_new_pizza(branch):
 pizzas = {}
 last_branch_added = None
 
+# Reset all variables to their default value
+# If the globals above are updated, they should be updated here
+def set_defaults():
+    global pizzas
+    global last_branch_added
+
+    pizzas = {}
+    last_branch_added = None
+
+def print_welcome_message():
+    print_pizza()
+    print('Welcome to git-pizza.')
+    print('To get started, create a new order with \'gitpizza init\'\n')
+
 # Defining folder for persistence between runs
 shelve_folder = 'shelves'
 shelve_name = 'pizza-persistence'
@@ -246,7 +259,7 @@ if os.path.isfile(shelve_fullname):
         last_branch_added = shelf['last_branch_added']
 
 # Argument parsing
-def parse_first_arg(arg):
+def parse_single_arg(arg):
     global pizzas
     if 'init' == arg:
         if len(pizzas) == 0:
@@ -255,16 +268,23 @@ def parse_first_arg(arg):
         else:
             print('You have already initiated an order.')
             print('You\'ll have to delete your current pizzas to create a new order.')
-            print('Try the command \'git branch\' to see your current pizzas.')
+            print('Try the command \'gitpizza branch\' to see your current pizzas.')
+    elif 'branch' == arg:
+        if (len(pizzas)) == 0:
+            print('You haven\'t created any pizzas. Try running \'gitpizza init\'')
+        else:
+            print('x')
+    elif 'reset' == arg:
+        set_defaults()
+        print('Your order has been reset.')
 
-# Tool
 if len(sys.argv) <= 1:
-    print('\tWelcome to git-pizza.')
-    print('\tTo get started, create a new order with git-pizza init')
-
-
-if len(sys.argv) == 2:
-    parse_first_arg(sys.argv[1])
+    print_welcome_message()
+elif len(sys.argv) == 2:
+    if len(pizzas) == 0 and 'init' != sys.argv[1]:
+        print_welcome_message()
+    else:
+        parse_single_arg(sys.argv[1])
 
 # Save the configuration for the next run
 with shelve.open(shelve_fullname, 'c') as shelf:
