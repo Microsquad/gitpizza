@@ -488,10 +488,25 @@ def perform_order_placement():
     time.sleep(5)
     browser.get('https://www.pizzahut.ca/#!/showcheckoutguestdetails')
     time.sleep(5)
-    browser.get('https://www.pizzahut.ca/#!/paymentdetails')
-    time.sleep(5)
 
+    print('submitting user info')
+    actions = ActionChains(browser)
+    actions.send_keys(Keys.TAB)
+    actions.send_keys(Keys.TAB)
+    actions.send_keys(order_info['user.firstname'])
+    actions.send_keys(Keys.TAB)
+    actions.send_keys(order_info['user.lastname'])
+    actions.send_keys(Keys.TAB)
+    actions.send_keys(order_info['user.email'])
+    actions.send_keys(Keys.TAB)
+    actions.send_keys(order_info['user.email'])
+    actions.send_keys(Keys.TAB)
+    actions.send_keys(order_info['user.phone'])
+
+    # Uncomment to actually order a pizza
+    # browser.find_element_by_css_selector('.button.ph-default-button.continue-checkout-button.ng-binding')
     time.sleep(2)
+
     html = browser.execute_script("return document.documentElement.outerHTML")
     total = re.search(r'<td class=\"product-price order-total ng-binding\">(.*?)<\/td>', html).group(1)
 
