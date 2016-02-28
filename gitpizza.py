@@ -2,6 +2,7 @@ import os
 import re
 import shelve
 import sys
+import time
 
 class bcolors:
     MAGENTA = '\033[95m'
@@ -13,13 +14,13 @@ class bcolors:
     END = '\033[0m'
 
 # Available sizes
-sizes = {'personal', 'small', 'medium', 'large'}
+sizes = ['personal', 'small', 'medium', 'large']
 # Available pizza bases
-bases = {'pan', 'homestyle', 'edge', 'stuffed', 'thin'}
+bases = ['pan', 'homestyle', 'edge', 'stuffed', 'thin']
 # Available sauces
-sauces = {'tomato', 'alfredo', 'beef-gravy', 'indian-butter', 'old-world-tomato'}
+sauces = ['tomato', 'alfredo', 'beef-gravy', 'indian-butter', 'old-world-tomato']
 # Available cheeses
-cheeses = {'regular', 'remove', 'light', 'extra'}
+cheeses = ['regular', 'remove', 'light', 'extra']
 
 # Sides that toppings can be added to
 sides = {'left', 'right', 'both'}
@@ -27,7 +28,7 @@ sides = {'left', 'right', 'both'}
 # List of available meat options
 meats = ['pepperoni', 'bacon-crumble', 'bacon', 'ham', 'grilled-chicken-breast', 'italian-sausage', 'mild-sausage', 'beef', 'smokey-maple-bacon']
 # List of available veggies options
-veggies = ['mushroom', 'green-pepper', 'pineapple', 'red-onions', 'roasted-red-peppers', 'hot-peppers', 'tomatoes', 'marinated-tomatoes', 'black-olives', 'roasted-garlic', 'parmesan', 'cheddar-cheese', 'cheese-curds', 'feta-cheese', 'pesto']
+veggies = ['mushroom', 'green-pepper', 'pineapple', 'red-onions', 'roasted-red-peppers', 'hot-peppers', 'tomatoes', 'marinated-tomatoes', 'black-olives', 'roasted-garlic', 'parmesan']
 
 required_data = ['address.city', 'address.province', 'address.street_number', 'address.street_name', 'user.email', 'user.firstname', 'user.lastname', 'user.phone', 'delivery.payment', ]
 
@@ -46,6 +47,19 @@ class Pizza(object):
         self.sauce = 'tomato'
         self.old_meats = None
         self.old_veggies = None
+
+    def get_meats(self):
+        return self.meats
+    def get_veggies(self):
+        return self.veggies
+    def get_cheese(self):
+        return self.cheese
+    def get_size(self):
+        return self.size
+    def get_base(self):
+        return self.base
+    def get_sauce(self):
+        return self.sauce
 
     def clear_merge_cache(self):
         self.old_meats = None
@@ -131,6 +145,11 @@ class Pizza(object):
 
     def add_topping(self, side_arg, topping):
         self.clear_merge_cache()
+
+        if (len(self.meats['left'] | self.meats['right'] | self.veggies['left'] | self.veggies['right'])) == 5:
+            print(bcolors.RED + 'fatal:' + bcolors.END + ' you can only have a maximum of 5 toppings.')
+            return False
+
         # If the side is not 'left', 'right', or 'both', return False
         if side_arg not in sides:
             return False
@@ -332,14 +351,30 @@ class Pizza(object):
 
         return properties
 
+def click_topping(actions, element, topping_list, topping, side):
+    topping_index = topping_list.index(topping)
+    topping_x = 450 + int(topping_index % 4) * 100
+    topping_y = 500 + int(topping_index / 4) * 100
+    topping_x_offset = 0
+    if side == 'left':
+        topping_x_offset = -65
+    elif side == 'right':
+        topping_x_offset = 65
+
+    actions.move_to_element_with_offset(element, topping_x, topping_y)
+    actions.move_to_element_with_offset(element, topping_x + topping_x_offset, topping_y - 85).click()
+    actions.move_to_element_with_offset(element, 15, 200).click()
+
 def perform_order_placement():
     from selenium import webdriver
     from selenium.webdriver.common.action_chains import ActionChains
     from selenium.webdriver.common.keys import Keys
-    import time
 
     # Load the pizza hut webpage
     browser = webdriver.Chrome()
+    browser.set_window_position(0, 0)
+    browser.set_window_size(800, 700)
+    browser.maximize_window()
     print('ordering pizza...')
     browser.get('https://www.pizzahut.ca/#!/home')
     print('entering address...')
@@ -375,16 +410,73 @@ def perform_order_placement():
     time.sleep(2)
 
     # Loading pizza page
-    print('navigating to pizza...')
-    browser.get('https://www.pizzahut.ca/#!/menu/pizza')
-    time.sleep(3)
-    actions = ActionChains(browser)
-    for i in range(10):
-        actions.send_keys(Keys.TAB)
-    actions.send_keys(Keys.ENTER)
-    actions.perform()
+    for pizza in pizzas:
+        print('navigating to pizza...')
+        browser.get('https://www.pizzahut.ca/#!/menu/pizza')
+        time.sleep(3)
+        actions = ActionChains(browser)
+        for i in range(10):
+            actions.send_keys(Keys.TAB)
+        actions.send_keys(Keys.ENTER)
+        actions.perform()
+        time.sleep(3)
 
-    time.sleep(30)
+        print('setting pizza size...')
+        root_div = browser.find_element_by_xpath('/html/body/div')
+        actions = ActionChains(browser)
+        actions.move_to_element_with_offset(root_div, 240, 315).click()
+        actions.move_to_element_with_offset(root_div, 225, 345).click()
+        actions.move_to_element_with_offset(root_div, 215, 610 - 70 * sizes.index(pizzas[pizza].get_size())).click()
+        actions.perform()
+        time.sleep(2)
+
+        print('setting pizza base...')
+        actions = ActionChains(browser)
+        actions.move_to_element_with_offset(root_div, 225, 400).click()
+        actions.move_to_element_with_offset(root_div, 225, 440 + 50 * bases.index(pizzas[pizza].get_base())).click()
+        actions.perform()
+        time.sleep(2)
+
+        print('setting pizza sauce...')
+        actions = ActionChains(browser)
+        actions.move_to_element_with_offset(root_div, 500, 315).click()
+        actions.move_to_element_with_offset(root_div, 475, 345).click()
+        actions.move_to_element_with_offset(root_div, 475, 390 + sauces.index(pizzas[pizza].get_sauce())).click()
+        actions.move_to_element_with_offset(root_div, 500, 315).click()
+        actions.perform()
+
+        print('setting meat toppings...')
+        actions = ActionChains(browser)
+        meat_cache = {'left': pizzas[pizza].get_meats()['left'].copy(), 'right': pizzas[pizza].get_meats()['right'].copy()}
+        for meat in meat_cache['left']:
+            if meat not in meat_cache['right']:
+                click_topping(actions, root_div, meats, meat, 'left')
+            else:
+                click_topping(actions, root_div, meats, meat, 'both')
+        for meat in meat_cache['right']:
+            if meat not in meat_cache['left']:
+                click_topping(actions, root_div, meats, meat, 'right')
+        actions.perform()
+
+        print('setting veggie toppings...')
+        actions = ActionChains(browser)
+        actions.move_to_element_with_offset(root_div, 730, 400).click()
+        actions.perform()
+        actions = ActionChains(browser)
+        veggie_cache = {'left': pizzas[pizza].get_veggies()['left'].copy(), 'right': pizzas[pizza].get_veggies()['right'].copy()}
+        for veggie in veggie_cache['left']:
+            if veggie not in veggie_cache['right']:
+                click_topping(actions, root_div, veggies, veggie, 'left')
+            else:
+                click_topping(actions, root_div, veggies, veggie, 'both')
+        for veggie in veggie_cache['right']:
+            if veggie not in veggie_cache['left']:
+                click_topping(actions, root_div, veggies, veggie, 'right')
+        actions.perform()
+
+        actions
+
+        time.sleep(30)
 
     browser.quit()
 
@@ -595,6 +687,10 @@ def parse_single_arg(arg):
                 print(bcolors.GREEN + '* ' + branch + bcolors.END)
             else:
                 print('  ' + branch)
+    elif 'clean' == arg:
+        print('Cleaning branch ' + current_branch)
+        del pizzas[current_branch]
+        add_new_pizza(current_branch)
     elif 'merge' == arg:
         pizzas[current_branch].merge()
     elif 'revert' == arg:
@@ -616,6 +712,16 @@ def parse_multi_args(args):
             add_new_pizza(args[2])
         elif regex_branch_name.match(args[1]):
             switch_to_branch(args[1])
+    elif args[0] == 'branch':
+        if args[1] == '--delete' and len(args) == 3:
+            if args[2] in pizzas:
+                if args[2] == current_branch:
+                    print(bcolors.RED + 'fatal:' + bcolors.END + ' you cannot delete the branch you are currently on.')
+                else:
+                    print(bcolors.BOLD + 'Deleting branch ' + args[2] + bcolors.END)
+                    del pizzas[args[2]]
+        else:
+            print_help('branch')
     elif args[0] == 'mv':
         if len(args) < 3:
             print_help('mv')
