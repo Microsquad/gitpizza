@@ -2,6 +2,8 @@
 
 It's like git, but instead of adding files, you add toppings. Commit, push, and your order is placed
 
+Winner of the "Best Developer Tool" category at nwHacks 2016.
+
 ## How to use
 
 1. Begin by downloading gitpizza.py (you can download it directly or clone the repository with `git clone https://github.com/Microsquad/gitpizza.git`)
