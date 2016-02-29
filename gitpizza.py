@@ -1,11 +1,13 @@
 #!/usr/bin/env python3.5
 
+# Imports
 import os
 import re
 import shelve
 import sys
 import time
 
+# Terminal colors
 class bcolors:
     MAGENTA = '\033[95m'
     BLUE = '\033[94m'
@@ -50,6 +52,7 @@ class Pizza(object):
         self.old_meats = None
         self.old_veggies = None
 
+    # Getter methods for class variables
     def get_meats(self):
         return self.meats
     def get_veggies(self):
@@ -489,19 +492,21 @@ def perform_order_placement():
     browser.get('https://www.pizzahut.ca/#!/showcheckoutguestdetails')
     time.sleep(5)
 
-    print('submitting user info')
-    actions = ActionChains(browser)
-    actions.send_keys(Keys.TAB)
-    actions.send_keys(Keys.TAB)
-    actions.send_keys(order_info['user.firstname'])
-    actions.send_keys(Keys.TAB)
-    actions.send_keys(order_info['user.lastname'])
-    actions.send_keys(Keys.TAB)
-    actions.send_keys(order_info['user.email'])
-    actions.send_keys(Keys.TAB)
-    actions.send_keys(order_info['user.email'])
-    actions.send_keys(Keys.TAB)
-    actions.send_keys(order_info['user.phone'])
+    # print('submitting user info')
+    # actions = ActionChains(browser)
+    # actions.send_keys(Keys.TAB)
+    # actions.send_keys(Keys.TAB)
+    # actions.send_keys(order_info['user.firstname'])
+    # actions.send_keys(Keys.TAB)
+    # actions.send_keys(order_info['user.lastname'])
+    # actions.send_keys(Keys.TAB)
+    # actions.send_keys(order_info['user.email'])
+    # actions.send_keys(Keys.TAB)
+    # actions.send_keys(order_info['user.email'])
+    # actions.send_keys(Keys.TAB)
+    # actions.send_keys(order_info['user.phone'])
+
+    browser.get('https://www.pizzahut.ca/#!/paymentdetails')
 
     # Uncomment to actually order a pizza
     # browser.find_element_by_css_selector('.button.ph-default-button.continue-checkout-button.ng-binding')
@@ -512,25 +517,18 @@ def perform_order_placement():
 
     print('pizza ordered! your total is {0}, please be ready to pay by {1}.'.format(total, order_info['delivery.payment']))
 
-    time.sleep(5)
+    time.sleep(30)
 
     browser.quit()
 
 # Prints a sick ass pizza
 def print_pizza():
     print("""
-        _....._
-    _.:`.--|--.`:._
-  .: .'\o  | o /'. '.
- // '.  \ o|  /  o '.\\
-//'._o'. \ |o/ o_.-'o\\\\
-|| o '-.'.\|/.-' o   ||
-||--o--o-->|<o-----o-||
-\\\\  o _.-'/|\\'-._o  o//
- \\\\.-'  o/ |o\ o '-.//
-  '.'.o / o|  \ o.'.'
-    `-:/.__|__o\:-'
-       `"--=--"`
+       _ _        _
+  __ _(_) |_ _ __(_)________ _
+ / _` | |  _| '_ \ |_ /_ / _` |
+ \__, |_|\__| .__/_/__/__\__,_|
+ |___/      |_|
     """)
 
 def print_welcome_message():
@@ -650,8 +648,8 @@ def set_defaults():
     order_info = {}
 
 # Defining folder for persistence between runs
-shelve_folder = '.gitpizza-shelves'
-shelve_name = 'pizza-persistence'
+shelve_folder = '.gitpizza-shelf'
+shelve_name = 'pizza'
 shelve_fullname = os.path.join(shelve_folder, shelve_name)
 
 # Create the folder for persistence if it doesn't exist
