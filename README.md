@@ -20,7 +20,7 @@ It's like git, but instead of adding files, you add toppings. Commit, push, and 
 `gitpizza checkout -b <branch-name>` Add a new pizza to the order.  
 `gitpizza checkout <branch-name>` Return to editing a certain pizza in the order.  
 `gitpizza branch` List the pizzas in the order, and highlight the current branch.  
-`gitpizza branch --delete <branch-name` Remove a branch (pizza) from the order.  
+`gitpizza branch --delete <branch-name>` Remove a branch (pizza) from the order.  
 `gitpizza mv [size|sauce|base] <option>` Update a property of the pizza.  
 `gitpizza diff` See the differences between the left and right sides of the current branch (pizza).  
 `gitpizza status` See the properties and toppings on the current pizza.  
