@@ -612,6 +612,12 @@ def print_help(command):
         print('Add the flag --global to save these options for future orders.')
     elif command == 'push':
         print(bcolors.MAGENTA + 'push' + bcolors.END + ' your pizza to ' + bcolors.BOLD + 'origin master' + bcolors.END + ' to place your order.')
+    elif command == 'add':
+        print(bcolors.MAGENTA + 'add' + bcolors.END + ' allows you to add any of the following toppings to your pizza.')
+        print('\t' + bcolors.GREEN + 'meats: ' + bcolors.END + ', '.join(meats))
+        print('\t' + bcolors.GREEN + 'veggies: ' + bcolors.END + ', '.join(veggies))
+    elif command == 'rm':
+        print(bcolors.MAGENTA + 'rm' + bcolors.END + ' allows you to remove a topping from your pizza')
 
 # Globals
 pizzas = {}
