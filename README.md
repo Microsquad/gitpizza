@@ -24,9 +24,11 @@ Winner of the "Best Developer Tool" category at nwHacks 2016.
 `gitpizza branch` List the pizzas in the order, and highlight the current branch.  
 `gitpizza branch --delete <branch-name>` Remove a branch (pizza) from the order.  
 `gitpizza mv [size|sauce|base] <option>` Update a property of the pizza.  
+`gitpizza config` Lists the available config options.  
+`gitpizza config [--global] <config.name> <value>` Updates `config.name` to be equal to `value`. Including the option `--global` also updates the value to be the default for new repositories setup with `gitpizza init`.  
 `gitpizza diff` See the differences between the left and right sides of the current branch (pizza).  
 `gitpizza status` See the properties and toppings on the current pizza.  
-`gitpizza clean` Reset the current pizza to its initial state. Cannot be undone.
+`gitpizza clean` Reset the current pizza to its initial state. Cannot be undone.  
 `gitpizza commit` View the properties of all of the branches in the order and check the order details.  
 `gitpizza push origin master` Begins the process of ordering a pizza. This process will stop just before finishing a pizza order, to ensure orders are not accidentally misplaced. Use with care!
 
