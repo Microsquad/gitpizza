@@ -741,7 +741,7 @@ def parse_single_arg(arg):
     elif 'reset' == arg:
         set_defaults()
         print(bcolors.BOLD + 'Your order has been reset.' + bcolors.END)
-    elif arg in ['mv', 'config', 'push']:
+    elif arg in ['mv', 'config', 'push', 'add', 'rm']:
         print_help(arg)
 
 def parse_multi_args(args):
