@@ -15,6 +15,7 @@ Winner of the "Best Developer Tool" category at nwHacks 2016.
 
 `gitpizza init` Initialize a new order.  
 `gitpizza reset` Remove an order and return gitpizza to its initial state.  
+`gitpizza add` Print a list of available pizza toppings.
 `gitpizza add [--left|--right|--both] <topping>` Add a topping to the pizza. Provide either `--left`, `--right` or `--both` (default) to add the topping to a specific side.  
 `gitpizza rm [--left|--right|--both] <topping>` Remove a topping from the pizza. Provide either `--left`, `--right` or `--both` (default) to remove the topping only from a specific side.  
 `gitpizza merge` Add any toppings which are missing from the left side of the pizza to the right and vice versa.  
