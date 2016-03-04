@@ -463,7 +463,7 @@ def perform_order_placement():
                 click_topping(actions, root_div, meats, meat, 'right')
         actions.perform()
 
-        time.sleep(10)
+        time.sleep(2)
 
         print('setting veggie toppings...')
         actions = ActionChains(browser)
@@ -480,33 +480,52 @@ def perform_order_placement():
             if veggie not in veggie_cache['left']:
                 click_topping(actions, root_div, veggies, veggie, 'right')
         actions.perform()
-        time.sleep(10)
+        time.sleep(2)
 
         browser.find_element_by_css_selector('.button.ph-default-button.qs-text-button.ng-binding').click()
 
     print('proceeding to checkout...')
     browser.get('https://www.pizzahut.ca/#!/cart')
-    time.sleep(5)
-    browser.get('https://www.pizzahut.ca/#!/checkout')
-    time.sleep(5)
-    browser.get('https://www.pizzahut.ca/#!/showcheckoutguestdetails')
-    time.sleep(5)
+    time.sleep(2)
 
-    # print('submitting user info')
-    # actions = ActionChains(browser)
-    # actions.send_keys(Keys.TAB)
-    # actions.send_keys(Keys.TAB)
-    # actions.send_keys(order_info['user.firstname'])
-    # actions.send_keys(Keys.TAB)
-    # actions.send_keys(order_info['user.lastname'])
-    # actions.send_keys(Keys.TAB)
-    # actions.send_keys(order_info['user.email'])
-    # actions.send_keys(Keys.TAB)
-    # actions.send_keys(order_info['user.email'])
-    # actions.send_keys(Keys.TAB)
-    # actions.send_keys(order_info['user.phone'])
+    actions = ActionChains(browser)
+    for i in range(3):
+        actions.send_keys(Keys.TAB)
+    actions.send_keys(Keys.ENTER)
+    actions.perform()
+    time.sleep(2)
 
-    browser.get('https://www.pizzahut.ca/#!/paymentdetails')
+    actions = ActionChains(browser)
+    for i in range(7):
+        actions.send_keys(Keys.TAB)
+    actions.send_keys(Keys.ENTER)
+    actions.perform()
+    time.sleep(2)
+
+    html = browser.execute_script("return document.documentElement.outerHTML")
+    if ('Your store is currently closed' in html):
+        print(bcolors.RED + 'fatal: ' + bcolors.END + ' your store is closed. Please try your order again another time.')
+        browser.quit()
+        return
+
+    print('submitting user info...')
+    actions = ActionChains(browser)
+    actions.send_keys(Keys.TAB)
+    actions.send_keys(Keys.TAB)
+    actions.send_keys(order_info['user.firstname'])
+    actions.send_keys(Keys.TAB)
+    actions.send_keys(order_info['user.lastname'])
+    actions.send_keys(Keys.TAB)
+    actions.send_keys(order_info['user.email'])
+    actions.send_keys(Keys.TAB)
+    actions.send_keys(order_info['user.email'])
+    actions.send_keys(Keys.TAB)
+    actions.send_keys(order_info['user.phone'])
+    actions.send_keys(Keys.TAB)
+    actions.send_keys(Keys.TAB)
+    actions.send_keys(Keys.ENTER)
+    actions.perform()
+    time.sleep(2)
 
     # Uncomment to actually order a pizza
     # browser.find_element_by_css_selector('.button.ph-default-button.continue-checkout-button.ng-binding')
@@ -516,8 +535,6 @@ def perform_order_placement():
     total = re.search(r'<td class=\"product-price order-total ng-binding\">(.*?)<\/td>', html).group(1)
 
     print('pizza ordered! your total is {0}, please be ready to pay by {1}.'.format(total, order_info['delivery.payment']))
-
-    time.sleep(30)
 
     browser.quit()
 
