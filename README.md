@@ -4,6 +4,12 @@ It's like git, but instead of adding files, you add toppings. Commit, push, and 
 
 Winner of the "Best Developer Tool" category at nwHacks 2016.
 
+## Demo
+
+Go check out the demo on YouTube
+
+https://youtu.be/6RalEBR44n8
+
 ## How to use
 
 1. Begin by downloading gitpizza.py (you can download it directly or clone the repository with `git clone https://github.com/Microsquad/gitpizza.git`)
