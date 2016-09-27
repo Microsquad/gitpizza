@@ -8,7 +8,7 @@ Winner of the "Best Developer Tool" category at nwHacks 2016.
 
 Go check out the demo on YouTube
 
-https://youtu.be/6RalEBR44n8
+https://youtu.be/mT0VurvJXC8
 
 ## How to use
 
